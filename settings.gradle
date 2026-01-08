@@ -1,0 +1,10 @@
+rootProject.name = 'ecommerce-microservices-platform'
+
+// Include common modules
+include 'common:events-library'
+
+// Include service modules
+include 'services:order-service'
+include 'services:payment-service'
+include 'services:notification-service'
+include 'services:api-gateway'

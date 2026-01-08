@@ -28,6 +28,6 @@ WORKDIR /app
 COPY --from=builder /build/build/libs/*.jar /app/app.jar
 
 # Expose the application port
-EXPOSE 8081
+EXPOSE 8080
 
 ENTRYPOINT ["java", "-jar", "/app/app.jar"]

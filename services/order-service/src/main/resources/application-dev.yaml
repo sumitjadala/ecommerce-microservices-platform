@@ -5,3 +5,8 @@ spring:
 mvc:
   servlet:
     path: /api/v1
+
+aws:
+  sns:
+    topic:
+      order-events: arn:aws:sns:ap-south-1:625189191389:order-events

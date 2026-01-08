@@ -1,3 +1,35 @@
 spring:
   application:
     name: payment-service
+  datasource:
+    url: ${DB_URL:jdbc:postgresql://localhost:5432/payment_db}
+    username: ${DB_USERNAME:postgres}
+    password: ${DB_PASSWORD:postgres}
+    driver-class-name: org.postgresql.Driver
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+
+# AWS Configuration
+aws:
+  region: ${AWS_REGION:ap-south-1}
+  sqs:
+    queue-name: ${SQS_QUEUE_NAME:payment-order-created-queue}
+  sns:
+    topic-arn: ${SNS_TOPIC_ARN:arn:aws:sns:ap-south-1:625189191389:payment-events}
+
+# Spring Cloud AWS Configuration
+spring:
+  cloud:
+    aws:
+      region:
+        static: ${AWS_REGION:ap-south-1}
+      sqs:
+        enabled: true
+
+server:
+  port: ${SERVER_PORT:8082}
