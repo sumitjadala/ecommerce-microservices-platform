@@ -18,18 +18,16 @@ repositories {
 	mavenCentral()
 }
 
-dependencyManagement {
-	imports {
-		mavenBom 'software.amazon.awssdk:bom:2.20.0'
-	}
-}
-
 dependencies {
 	implementation 'org.springframework.boot:spring-boot-starter-actuator'
 	implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
 	implementation 'org.springframework.boot:spring-boot-starter-validation'
 	implementation 'org.springframework.boot:spring-boot-starter-webmvc'
-	implementation 'software.amazon.awssdk:sns'
+	
+	// Spring Cloud AWS for SNS
+	implementation platform('io.awspring.cloud:spring-cloud-aws-dependencies:4.0.0-M1')
+	implementation 'io.awspring.cloud:spring-cloud-aws-starter-sns'
+	
 	implementation 'com.fasterxml.jackson.datatype:jackson-datatype-jsr310'
 	runtimeOnly 'org.postgresql:postgresql'
 	testImplementation 'org.springframework.boot:spring-boot-starter-actuator-test'
