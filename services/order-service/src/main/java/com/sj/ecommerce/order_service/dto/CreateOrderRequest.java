@@ -1,3 +1,5 @@
 package com.sj.ecommerce.order_service.dto;
 
-public record CreateOrderRequest(String status) {}
+import java.math.BigDecimal;
+
+public record CreateOrderRequest(Long userId, BigDecimal amount, String status) {}

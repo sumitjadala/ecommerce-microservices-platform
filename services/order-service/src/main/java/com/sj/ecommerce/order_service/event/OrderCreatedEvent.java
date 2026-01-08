@@ -2,22 +2,26 @@ package com.sj.ecommerce.order_service.event;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
+import java.math.BigDecimal;
 import java.time.Instant;
+import java.util.UUID;
 
 public record OrderCreatedEvent(
-        @JsonProperty("eventType") String eventType,
+        @JsonProperty("eventId") String eventId,
+        @JsonProperty("eventVersion") String eventVersion,
+        @JsonProperty("occurredAt") Instant occurredAt,
         @JsonProperty("orderId") Long orderId,
-        @JsonProperty("status") String status,
-        @JsonProperty("createdAt") Instant createdAt,
-        @JsonProperty("timestamp") Instant timestamp
+        @JsonProperty("userId") Long userId,
+        @JsonProperty("amount") BigDecimal amount
 ) {
-    public static OrderCreatedEvent of(Long orderId, String status, Instant createdAt) {
+    public static OrderCreatedEvent of(Long orderId, Long userId, BigDecimal amount) {
         return new OrderCreatedEvent(
-                "ORDER_CREATED",
+                UUID.randomUUID().toString(),
+                "1.0",
+                Instant.now(),
                 orderId,
-                status,
-                createdAt,
-                Instant.now()
+                userId,
+                amount
         );
     }
 }

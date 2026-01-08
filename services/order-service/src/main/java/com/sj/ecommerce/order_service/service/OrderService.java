@@ -21,13 +21,13 @@ public class OrderService {
     }
 
     public OrderResponse createOrder(CreateOrderRequest request) {
-        Order order = new Order(request.status(), Instant.now());
+        Order order = new Order(request.userId(), request.amount(), request.status(), Instant.now());
         Order saved = orderRepository.save(order);
         
         OrderCreatedEvent event = OrderCreatedEvent.of(
                 saved.getId(),
-                saved.getStatus(),
-                saved.getCreatedAt() == null ? Instant.now() : saved.getCreatedAt()
+                saved.getUserId(),
+                saved.getAmount()
         );
         snsEventPublisher.publish(event);
         

@@ -34,7 +34,7 @@ public class SnsEventPublisher {
         try {
             String message = objectMapper.writeValueAsString(event);
 
-            String subject = event instanceof OrderCreatedEvent ? ((OrderCreatedEvent) event).eventType() : event.getClass().getSimpleName();
+            String subject = event instanceof OrderCreatedEvent ? "ORDER_CREATED" : event.getClass().getSimpleName();
 
             PublishRequest publishRequest = PublishRequest.builder()
                     .topicArn(orderEventsTopicArn)

@@ -1,6 +1,7 @@
 package com.sj.ecommerce.payment_service.event;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 import java.math.BigDecimal;
@@ -10,6 +11,7 @@ import java.time.Instant;
  * Immutable local event model for OrderCreated domain events.
  * This model is NOT shared with other services.
  */
+@JsonIgnoreProperties(ignoreUnknown = true)
 public final class OrderCreatedEvent {
 
     private final String eventId;
