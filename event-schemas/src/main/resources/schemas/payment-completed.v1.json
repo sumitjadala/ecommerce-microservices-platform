@@ -1,0 +1,59 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://ecommerce.example.com/schemas/payment-completed.v1.json",
+  "title": "Payment Completed Event",
+  "description": "Event published when a payment is successfully completed",
+  "type": "object",
+  "required": [
+    "eventId",
+    "eventVersion",
+    "occurredAt",
+    "paymentId",
+    "orderId",
+    "userId",
+    "amount",
+    "status"
+  ],
+  "properties": {
+    "eventId": {
+      "type": "string",
+      "description": "Unique identifier for this event instance"
+    },
+    "eventVersion": {
+      "type": "string",
+      "description": "Version of the event schema",
+      "examples": ["1.0"]
+    },
+    "occurredAt": {
+      "type": "string",
+      "format": "date-time",
+      "description": "ISO 8601 timestamp when the event occurred"
+    },
+    "paymentId": {
+      "type": "integer",
+      "format": "int64",
+      "description": "Unique identifier for the payment"
+    },
+    "orderId": {
+      "type": "integer",
+      "format": "int64",
+      "description": "Order ID this payment is for"
+    },
+    "userId": {
+      "type": "integer",
+      "format": "int64",
+      "description": "User who made the payment"
+    },
+    "amount": {
+      "type": "number",
+      "minimum": 0,
+      "description": "Payment amount in the default currency"
+    },
+    "status": {
+      "type": "string",
+      "description": "Payment status",
+      "examples": ["COMPLETED", "SUCCESS"]
+    }
+  },
+  "additionalProperties": false
+}
