@@ -24,10 +24,10 @@ dependencies {
 	implementation 'org.springframework.boot:spring-boot-starter-validation'
 	implementation 'org.springframework.boot:spring-boot-starter-webmvc'
 	
-	// Use AWS SDK v2 directly for SQS (avoid Spring Cloud AWS starter incompatibility with Spring Boot 4)
-	implementation platform('software.amazon.awssdk:bom:2.28.29')
-	implementation 'software.amazon.awssdk:sns'
-	implementation 'software.amazon.awssdk:sqs'
+	// Spring Cloud AWS for SQS and SNS
+	implementation platform('io.awspring.cloud:spring-cloud-aws-dependencies:4.0.0-M1')
+	implementation 'io.awspring.cloud:spring-cloud-aws-starter-sqs'
+	implementation 'io.awspring.cloud:spring-cloud-aws-starter-sns'
 	
 	// JSON processing
 	implementation 'com.fasterxml.jackson.core:jackson-databind'
