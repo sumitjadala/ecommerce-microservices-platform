@@ -28,6 +28,9 @@ dependencies {
 	implementation platform('io.awspring.cloud:spring-cloud-aws-dependencies:4.0.0-M1')
 	implementation 'io.awspring.cloud:spring-cloud-aws-starter-sns'
 	
+	// Event Schemas Library (using JAR file)
+	implementation files('../../event-schemas/latest-jar/event-schemas-1.0.0.jar')
+	
 	implementation 'com.fasterxml.jackson.datatype:jackson-datatype-jsr310'
 	runtimeOnly 'org.postgresql:postgresql'
 	testImplementation 'org.springframework.boot:spring-boot-starter-actuator-test'

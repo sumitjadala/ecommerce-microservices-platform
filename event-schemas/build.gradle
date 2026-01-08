@@ -36,11 +36,14 @@ jsonSchema2Pojo {
     // Package name for generated classes
     targetPackage = 'com.ecommerce.contracts.events'
     
-    // Generate mutable types with setters for ease of use
-    generateBuilders = false
+    // Generate builder pattern for fluent API
+    generateBuilders = true
     includeConstructors = true
     constructorsRequiredPropertiesOnly = false
     includeAdditionalProperties = false
+    
+    // Use Long for integer types
+    useLongIntegers = true
     
     // Use Java records (requires Java 14+)
     useJakartaValidation = false

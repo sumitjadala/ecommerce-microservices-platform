@@ -1,7 +1,7 @@
 package com.sj.ecommerce.payment_service.service;
 
-import com.sj.ecommerce.payment_service.event.PaymentCompletedEvent;
-import com.sj.ecommerce.payment_service.event.PaymentFailedEvent;
+import com.ecommerce.contracts.events.PaymentCompletedV1;
+import com.ecommerce.contracts.events.PaymentFailedV1;
 import io.awspring.cloud.sns.core.SnsTemplate;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -30,7 +30,7 @@ public class PaymentEventPublisher {
      * Publishes PaymentCompleted event to SNS.
      * Fire-and-forget, no retries.
      */
-    public void publishPaymentCompleted(PaymentCompletedEvent event) {
+    public void publishPaymentCompleted(PaymentCompletedV1 event) {
         try {
             snsTemplate.sendNotification(snsTopicArn, event, "PaymentCompleted");
             
@@ -45,7 +45,7 @@ public class PaymentEventPublisher {
      * Publishes PaymentFailed event to SNS.
      * Fire-and-forget, no retries.
      */
-    public void publishPaymentFailed(PaymentFailedEvent event) {
+    public void publishPaymentFailed(PaymentFailedV1 event) {
         try {
             snsTemplate.sendNotification(snsTopicArn, event, "PaymentFailed");
             

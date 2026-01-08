@@ -1,17 +1,18 @@
 package com.sj.ecommerce.payment_service.service;
 
+import com.ecommerce.contracts.events.OrderCreatedV1;
+import com.ecommerce.contracts.events.PaymentCompletedV1;
+import com.ecommerce.contracts.events.PaymentFailedV1;
 import com.sj.ecommerce.payment_service.dto.CreatePaymentRequest;
 import com.sj.ecommerce.payment_service.dto.PaymentResponse;
 import com.sj.ecommerce.payment_service.entity.Payment;
-import com.sj.ecommerce.payment_service.event.OrderCreatedEvent;
-import com.sj.ecommerce.payment_service.event.PaymentCompletedEvent;
-import com.sj.ecommerce.payment_service.event.PaymentFailedEvent;
 import com.sj.ecommerce.payment_service.repository.PaymentRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.Optional;
 import java.util.UUID;
@@ -49,7 +50,7 @@ public class PaymentService {
      * This method is transactional: payment persistence and publishing are done within the transaction.
      */
     @Transactional
-    public void processOrderCreatedEvent(OrderCreatedEvent event) {
+    public void processOrderCreatedEvent(OrderCreatedV1 event) {
         log.info("Processing OrderCreated event in PaymentService: orderId={}, eventId={}", event.getOrderId(), event.getEventId());
 
         Optional<Payment> existingPayment = paymentRepository.findByOrderId(event.getOrderId());
@@ -65,7 +66,7 @@ public class PaymentService {
         Payment payment = new Payment(
                 event.getOrderId(),
                 event.getUserId(),
-                event.getAmount(),
+                BigDecimal.valueOf(event.getAmount()),
                 idempotencyKey,
                 status,
                 Instant.now()
@@ -76,27 +77,25 @@ public class PaymentService {
 
         // publish result
         if ("SUCCESS".equals(savedPayment.getStatus())) {
-            PaymentCompletedEvent completedEvent = new PaymentCompletedEvent(
-                    UUID.randomUUID().toString(),
-                    "1.0",
-                    Instant.now(),
-                    savedPayment.getId(),
-                    savedPayment.getOrderId(),
-                    savedPayment.getUserId(),
-                    savedPayment.getAmount(),
-                    savedPayment.getStatus()
-            );
+            PaymentCompletedV1 completedEvent = new PaymentCompletedV1()
+                    .withEventId(UUID.randomUUID().toString())
+                    .withEventVersion("1.0")
+                    .withOccurredAt(java.util.Date.from(Instant.now()))
+                    .withPaymentId(savedPayment.getId())
+                    .withOrderId(savedPayment.getOrderId())
+                    .withUserId(savedPayment.getUserId())
+                    .withAmount(savedPayment.getAmount().doubleValue())
+                    .withStatus(savedPayment.getStatus());
             eventPublisher.publishPaymentCompleted(completedEvent);
         } else {
-            PaymentFailedEvent failedEvent = new PaymentFailedEvent(
-                    UUID.randomUUID().toString(),
-                    "1.0",
-                    Instant.now(),
-                    savedPayment.getOrderId(),
-                    savedPayment.getUserId(),
-                    savedPayment.getAmount(),
-                    "Payment processing failed"
-            );
+            PaymentFailedV1 failedEvent = new PaymentFailedV1()
+                    .withEventId(UUID.randomUUID().toString())
+                    .withEventVersion("1.0")
+                    .withOccurredAt(java.util.Date.from(Instant.now()))
+                    .withOrderId(savedPayment.getOrderId())
+                    .withUserId(savedPayment.getUserId())
+                    .withAmount(savedPayment.getAmount().doubleValue())
+                    .withReason("Payment processing failed");
             eventPublisher.publishPaymentFailed(failedEvent);
         }
     }

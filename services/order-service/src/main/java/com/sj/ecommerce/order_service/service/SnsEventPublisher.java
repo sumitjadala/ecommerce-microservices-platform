@@ -1,6 +1,6 @@
 package com.sj.ecommerce.order_service.service;
 
-import com.sj.ecommerce.order_service.event.OrderCreatedEvent;
+import com.ecommerce.contracts.events.OrderCreatedV1;
 import com.sj.ecommerce.order_service.exception.EventPublishingException;
 import io.awspring.cloud.sns.core.SnsTemplate;
 import org.slf4j.Logger;
@@ -21,16 +21,14 @@ public class SnsEventPublisher {
         this.snsTemplate = snsTemplate;
     }
 
-    public void publish(Object event) {
+    public void publish(OrderCreatedV1 event) {
         try {
-            String subject = event instanceof OrderCreatedEvent ? "ORDER_CREATED" : event.getClass().getSimpleName();
+            snsTemplate.sendNotification(orderEventsTopicArn, event, "ORDER_CREATED");
             
-            snsTemplate.sendNotification(orderEventsTopicArn, event, subject);
-            
-            logger.info("Successfully published {} to SNS", subject);
+            logger.info("Successfully published ORDER_CREATED to SNS");
 
         } catch (Exception e) {
-            logger.error("Failed to publish event {}", event.getClass().getSimpleName(), e);
+            logger.error("Failed to publish ORDER_CREATED event", e);
             throw new EventPublishingException("SNS publishing failed", null, e);
         }
     }
