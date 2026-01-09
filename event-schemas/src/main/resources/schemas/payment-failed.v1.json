@@ -8,6 +8,7 @@
     "eventId",
     "eventVersion",
     "occurredAt",
+    "paymentId",
     "orderId",
     "userId",
     "amount",
@@ -16,41 +17,34 @@
   "properties": {
     "eventId": {
       "type": "string",
-      "description": "Unique identifier for this event instance"
+      "format": "uuid"
     },
     "eventVersion": {
       "type": "string",
-      "description": "Version of the event schema",
       "examples": ["1.0"]
     },
     "occurredAt": {
       "type": "string",
-      "format": "date-time",
-      "description": "ISO 8601 timestamp when the event occurred"
+      "format": "date-time"
+    },
+    "paymentId": {
+      "type": "integer",
+      "format": "int64"
     },
     "orderId": {
       "type": "integer",
-      "format": "int64",
-      "description": "Order ID this payment was for"
+      "format": "int64"
     },
     "userId": {
       "type": "integer",
-      "format": "int64",
-      "description": "User who attempted the payment"
+      "format": "int64"
     },
     "amount": {
       "type": "number",
-      "minimum": 0,
-      "description": "Payment amount that was attempted"
+      "minimum": 0
     },
     "reason": {
-      "type": "string",
-      "description": "Reason for payment failure",
-      "examples": [
-        "Insufficient funds",
-        "Card declined",
-        "Payment processing error"
-      ]
+      "type": "string"
     }
   },
   "additionalProperties": false

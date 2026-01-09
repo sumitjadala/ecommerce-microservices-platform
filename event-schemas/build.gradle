@@ -6,79 +6,57 @@ plugins {
 
 group = 'com.ecommerce.platform'
 version = '1.0.0'
-sourceCompatibility = '17'
+
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(17)
+    }
+}
 
 repositories {
     mavenCentral()
 }
 
 dependencies {
-    // Jackson for JSON processing (used by generated code)
+    // Required for generated JSON bindings
     implementation 'com.fasterxml.jackson.core:jackson-databind:2.15.3'
-    implementation 'com.fasterxml.jackson.core:jackson-annotations:2.15.3'
-    
-    // Jakarta validation annotations (optional, for generated validation)
+
+    // Validation API (compile-time only, optional)
     compileOnly 'jakarta.validation:jakarta.validation-api:3.0.2'
-    
-    // Testing
+
     testImplementation 'org.junit.jupiter:junit-jupiter:5.10.0'
-    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 }
 
-// Configure jsonschema2pojo plugin to generate Java records from JSON Schemas
 jsonSchema2Pojo {
-    // Source directory containing JSON Schema files
+    // JSON Schemas source
     source = files("${projectDir}/src/main/resources/schemas")
-    
-    // Target directory for generated Java sources
-    targetDirectory = file("${buildDir}/generated/sources/jsonschema2pojo")
-    
-    // Package name for generated classes
+
+    // Generated sources output
+    targetDirectory = file("${buildDir}/generated/sources/schemas")
+
+    // Package for generated classes
     targetPackage = 'com.ecommerce.contracts.events'
-    
-    // Generate builder pattern for fluent API
-    generateBuilders = true
-    includeConstructors = true
-    constructorsRequiredPropertiesOnly = false
+
+    // Intentional customizations only
     includeAdditionalProperties = false
-    
-    // Use Long for integer types
+    includeHashcodeAndEquals = false
+    includeToString = false
+    includeSetters = false
     useLongIntegers = true
-    
-    // Use Java records (requires Java 14+)
-    useJakartaValidation = false
-    includeJsr303Annotations = false
-    
-    // Serialization settings
-    serializable = false
-    includeHashcodeAndEquals = true
-    includeToString = true
-    
-    // Additional settings
-    usePrimitives = false
-    includeGetters = true
-    includeSetters = true // Enable setters for flexibility
-    useTitleAsClassname = false
-    
-    // Source type
-    sourceType = 'jsonschema'
+    annotationStyle = 'NONE'
+    includeConstructors = true
+    dateTimeType = 'java.time.Instant'
+
 }
 
-// Add generated sources to the source sets
 sourceSets {
     main {
         java {
-            srcDir "${buildDir}/generated/sources/jsonschema2pojo"
+            srcDir "${buildDir}/generated/sources/schemas"
         }
     }
 }
 
-// Ensure schemas are included in the JAR
-tasks.named('processResources') {
-    duplicatesStrategy = DuplicatesStrategy.INCLUDE
-}
-
-// Generate Java classes before compiling
 tasks.named('compileJava') {
     dependsOn tasks.named('generateJsonSchema2Pojo')
 }
@@ -87,40 +65,21 @@ tasks.named('test') {
     useJUnitPlatform()
 }
 
-// Configure JAR to include schemas
 tasks.named('jar') {
     from('src/main/resources') {
         include 'schemas/**/*.json'
         into 'META-INF/schemas'
     }
-    
-    manifest {
-        attributes(
-            'Implementation-Title': 'Event Contracts',
-            'Implementation-Version': project.version,
-            'Built-By': System.getProperty('user.name'),
-            'Built-Date': new Date().format('yyyy-MM-dd HH:mm:ss')
-        )
-    }
 }
 
-// Maven publishing configuration (optional)
 publishing {
     publications {
         maven(MavenPublication) {
             from components.java
-            
+
             pom {
                 name = 'Event Contracts'
                 description = 'Shared event contract definitions using JSON Schema'
-                url = 'https://github.com/your-org/ecommerce-platform'
-                
-                licenses {
-                    license {
-                        name = 'The Apache License, Version 2.0'
-                        url = 'http://www.apache.org/licenses/LICENSE-2.0.txt'
-                    }
-                }
             }
         }
     }

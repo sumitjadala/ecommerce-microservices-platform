@@ -1,8 +1,8 @@
 package com.sj.ecommerce.order_service.enitity;
 
 import jakarta.persistence.*;
-import java.math.BigDecimal;
 import java.time.Instant;
+import java.util.List;
 
 @Entity
 @Table(name = "orders")
@@ -11,21 +11,40 @@ public class Order {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    private Long userId;
+    private Long userId;    
 
-    private BigDecimal amount;
+    private Double amount;
 
-    private String status;
+    @Enumerated(EnumType.STRING)
+    private OrderStatus status;
+
+    @ElementCollection
+    @CollectionTable(name = "order_products", joinColumns = @JoinColumn(name = "order_id"))
+    @Column(name = "product_id")
+    private List<Long> productIds;
 
     private Instant createdAt;
 
     public Order() {}
 
-    public Order(Long userId, BigDecimal amount, String status, Instant createdAt) {
+    // Full constructor (createdAt is set during persist)
+    public Order(Long userId, Double amount, OrderStatus status, List<Long> productIds) {
         this.userId = userId;
         this.amount = amount;
         this.status = status;
-        this.createdAt = createdAt;
+        this.productIds = productIds;
+    }
+
+    // Convenience constructor used when creating a new order: default status CREATED
+    public Order(Long userId, Double amount, java.util.List<Long> productIds) {
+        this(userId, amount, OrderStatus.CREATED, productIds);
+    }
+
+    @PrePersist
+    public void onCreate() {
+        if (this.createdAt == null) {
+            this.createdAt = Instant.now();
+        }
     }
 
     public Long getId() {
@@ -40,20 +59,12 @@ public class Order {
         this.userId = userId;
     }
 
-    public BigDecimal getAmount() {
+    public Double getAmount() {
         return amount;
     }
 
-    public void setAmount(BigDecimal amount) {
+    public void setAmount(Double amount) {
         this.amount = amount;
-    }
-
-    public String getStatus() {
-        return status;
-    }
-
-    public void setStatus(String status) {
-        this.status = status;
     }
 
     public Instant getCreatedAt() {
@@ -62,5 +73,21 @@ public class Order {
 
     public void setCreatedAt(Instant createdAt) {
         this.createdAt = createdAt;
+    }
+
+    public java.util.List<Long> getProductIds() {
+        return productIds;
+    }
+
+    public void setProductIds(java.util.List<Long> productIds) {
+        this.productIds = productIds;
+    }
+
+    public OrderStatus getStatus() {
+        return status;
+    }
+
+    public void setStatus(OrderStatus status) {
+        this.status = status;
     }
 }

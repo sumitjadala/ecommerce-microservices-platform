@@ -77,26 +77,28 @@ public class PaymentService {
 
         // publish result
         if ("SUCCESS".equals(savedPayment.getStatus())) {
-            PaymentCompletedV1 completedEvent = new PaymentCompletedV1()
-                    .withEventId(UUID.randomUUID().toString())
-                    .withEventVersion("1.0")
-                    .withOccurredAt(java.util.Date.from(Instant.now()))
-                    .withPaymentId(savedPayment.getId())
-                    .withOrderId(savedPayment.getOrderId())
-                    .withUserId(savedPayment.getUserId())
-                    .withAmount(savedPayment.getAmount().doubleValue())
-                    .withStatus(savedPayment.getStatus());
-            eventPublisher.publishPaymentCompleted(completedEvent);
+                PaymentCompletedV1 completedEvent = new PaymentCompletedV1(
+                    UUID.randomUUID(),
+                    "1.0",
+                    Instant.now(),
+                    savedPayment.getId(),
+                    savedPayment.getOrderId(),
+                    savedPayment.getUserId(),
+                    savedPayment.getAmount().doubleValue()
+                );
+                eventPublisher.publishPaymentCompleted(completedEvent);
         } else {
-            PaymentFailedV1 failedEvent = new PaymentFailedV1()
-                    .withEventId(UUID.randomUUID().toString())
-                    .withEventVersion("1.0")
-                    .withOccurredAt(java.util.Date.from(Instant.now()))
-                    .withOrderId(savedPayment.getOrderId())
-                    .withUserId(savedPayment.getUserId())
-                    .withAmount(savedPayment.getAmount().doubleValue())
-                    .withReason("Payment processing failed");
-            eventPublisher.publishPaymentFailed(failedEvent);
+                PaymentFailedV1 failedEvent = new PaymentFailedV1(
+                    UUID.randomUUID(),
+                    "1.0",
+                    Instant.now(),
+                    savedPayment.getId(),
+                    savedPayment.getOrderId(),
+                    savedPayment.getUserId(),
+                    savedPayment.getAmount().doubleValue(),
+                    "Payment processing failed"
+                );
+                eventPublisher.publishPaymentFailed(failedEvent);
         }
     }
 }

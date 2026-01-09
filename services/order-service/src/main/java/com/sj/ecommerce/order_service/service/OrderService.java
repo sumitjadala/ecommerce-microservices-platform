@@ -7,10 +7,7 @@ import com.sj.ecommerce.order_service.enitity.Order;
 import com.sj.ecommerce.order_service.repository.OrderRepository;
 import org.springframework.stereotype.Service;
 
-import java.time.Instant;
-import java.util.Date;
-import java.util.Optional;
-import java.util.UUID;
+import java.util.*;
 
 @Service
 public class OrderService {
@@ -23,24 +20,31 @@ public class OrderService {
     }
 
     public OrderResponse createOrder(CreateOrderRequest request) {
-        Order order = new Order(request.userId(), request.amount(), request.status(), Instant.now());
+        List<Long> productIds = request.productIds();
+
+        Order order = new Order(request.userId(), null, productIds);
         Order saved = orderRepository.save(order);
-        
-        // Create event using builder pattern from event-schemas
-        OrderCreatedV1 event = new OrderCreatedV1()
-                .withEventId(UUID.randomUUID())
-                .withEventVersion("1.0")
-                .withOccurredAt(Date.from(saved.getCreatedAt()))
-                .withOrderId(saved.getId())
-                .withUserId(saved.getUserId())
-                .withAmount(saved.getAmount().doubleValue());
+
+        // Create event using constructor-only immutable event class
+        OrderCreatedV1 event = new OrderCreatedV1(
+            UUID.randomUUID(),
+            "1.0",
+            saved.getCreatedAt(),
+            saved.getId(),
+            saved.getUserId(),
+                saved.getAmount()
+        );
         snsEventPublisher.publish(event);
-        
-        return new OrderResponse(saved.getId(), saved.getStatus(), saved.getCreatedAt());
+
+        List<Long> savedProductIds = saved.getProductIds() == null ? List.of() : saved.getProductIds();
+        return new OrderResponse(saved.getId(), saved.getStatus().name(), saved.getCreatedAt(), savedProductIds);
     }
 
     public Optional<OrderResponse> getOrderById(Long id) {
         return orderRepository.findById(id)
-                .map(o -> new OrderResponse(o.getId(), o.getStatus(), o.getCreatedAt()));
+                .map(o -> {
+                   List<Long> ids = o.getProductIds() == null ? List.of() : o.getProductIds();
+                    return new OrderResponse(o.getId(), o.getStatus().name(), o.getCreatedAt(), ids);
+                });
     }
 }
