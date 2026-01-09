@@ -1,0 +1,17 @@
+spring:
+  application:
+    name: notification-service
+  mvc:
+    servlet:
+      path: /api/v1
+  cloud:
+    aws:
+      region:
+        static: ap-south-1
+      
+server:
+  port: 8083
+
+aws:
+  sqs:
+    queue-name: notification-payment-events-queue

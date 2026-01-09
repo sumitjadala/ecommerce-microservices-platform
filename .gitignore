@@ -1,71 +1,54 @@
-# Project-level .gitignore for a Spring Boot microservice (Gradle)
+# Build outputs
+build/
+target/
+out/
+bin/
 
-# --- Build outputs ---
-/build/
-/target/
-/out/
-
-# --- Gradle ---
-/.gradle/
+# Gradle
+.gradle/
 gradle-app.setting
-gradle-app.setting.backup
 
-# Gradle wrapper jars
-/gradle/wrapper/gradle-wrapper.jar
-
-# --- IntelliJ IDEA ---
-/.idea/
+# IDEs
+.idea/
 *.iml
 *.iws
-/.idea_modules/
-
-# --- Eclipse ---
 .classpath
 .project
 .settings/
+.vscode/
 
-# --- VS Code ---
-/.vscode/
-
-# --- Logs ---
-/logs/
+# Logs
 *.log
 
-# --- Temporary files ---
-/tmp/
-/temp/
+# Temporary files
 *.tmp
+tmp/
+temp/
 
-# --- Java artifacts ---
-*.jar
+# Java artifacts (keep gradle-wrapper.jar)
 *.war
 *.ear
 
-# --- Generated sources ---
-/generated/
-
-# --- OS files ---
+# OS files
 .DS_Store
 Thumbs.db
 
-# --- Environment / secrets ---
+# Environment & secrets
 .env
 .env.*
 secrets.properties
-application-local.yaml
 
-# --- Certificates / keys ---
+# Certificates
 *.jks
 *.keystore
 
-# --- Docker ---
+# Docker overrides
 docker-compose.override.yml
-docker-compose.*.yml
 
-# --- Test / coverage ---
-/coverage/
+# Test coverage
+coverage/
 *.lcov
 
-# --- Misc ---
+# Misc
 node_modules/
 .mvn/

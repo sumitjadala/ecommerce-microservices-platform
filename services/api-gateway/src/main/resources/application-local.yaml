@@ -1,0 +1,19 @@
+spring:
+  application:
+    name: api-gateway
+  cloud:
+    gateway:
+      server:
+        webflux:
+          routes:
+            - id: order-service
+              uri: http://order-service:8081
+              predicates:
+                - Path=/api/v1/orders/**
+            - id: notification-service
+              uri: http://notification-service:8083
+              predicates:
+                - Path=/api/v1/notifications/**
+
+server:
+  port: 8080

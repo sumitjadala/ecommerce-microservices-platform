@@ -1,0 +1,39 @@
+spring:
+  application:
+    name: payment-service
+  cloud:
+    aws:
+      region:
+        static: ap-south-1
+  datasource:
+    url: jdbc:postgresql://aws-1-ap-northeast-2.pooler.supabase.com:5432/postgres
+    username: ${SUPABASE_USERNAME}
+    password: ${SUPABASE_PASSWORD}
+    hikari:
+      maximum-pool-size: 3
+  jpa:
+    hibernate:
+      ddl-auto: update
+    open-in-view: false
+  mvc:
+    servlet:
+      path: /api/v1
+
+aws:
+  sqs:
+    queue-name: ${SQS_QUEUE_NAME:payment-order-created-queue}
+  sns:
+    topic-arn: ${SNS_TOPIC_ARN:arn:aws:sns:ap-south-1:625189191389:payment-events}
+
+server:
+  port: 8082
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics
+  endpoint:
+    health:
+      show-details: always
+
