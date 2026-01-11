@@ -18,6 +18,7 @@ import org.springframework.beans.factory.annotation.Value;
 import com.razorpay.RazorpayClient;
 import com.razorpay.RazorpayException;
 import com.razorpay.Order;
+import com.razorpay.Utils;
 import org.json.JSONObject;
 import java.time.Instant;
 import java.util.Optional;
@@ -35,6 +36,9 @@ public class PaymentService {
 
     @Value("${razorpay.key-secret:}")
     private String razorpayKeySecret;
+
+    @Value("${razorpay.webhook-secret:}")
+    private String razorpayWebhookSecret;
 
     public PaymentService(PaymentRepository paymentRepository, PaymentEventPublisher eventPublisher) {
         this.paymentRepository = paymentRepository;
@@ -83,17 +87,58 @@ public class PaymentService {
         );
 
         Payment savedPayment = paymentRepository.save(payment);
-        log.info("Payment persisted: paymentId={}, orderId={}, status={}", savedPayment.getId(), savedPayment.getOrderId(), savedPayment.getStatus());
+        log.info("Payment record created: paymentId={}, orderId={}, status=CREATED (awaiting user payment intent)", 
+                 savedPayment.getId(), savedPayment.getOrderId());
+        
+        // NOTE: We do NOT call Razorpay here. The user hasn't clicked "Pay Now" yet.
+        // Razorpay order will be created when user explicitly requests payment via POST /payments/{orderId}/initiate
+    }
 
-        // Create Razorpay order (backend-only) and persist razorpay details
-        try {
-            createAndAttachRazorpayOrder(savedPayment);
-            log.info("Razorpay order created and attached: paymentId={}, razorpayOrderId={}", savedPayment.getId(), savedPayment.getRazorpayOrderId());
-        } catch (Exception ex) {
-            log.error("Failed to create Razorpay order for orderId={}: {}", event.getOrderId(), ex.getMessage(), ex);
-            // mark payment as FAILED if razorpay creation fails
-            savedPayment.setStatus(PaymentStatus.FAILED);
+    /**
+     * STEP 3 & 4: User clicks "Pay Now" - Initiate payment for an existing order.
+     * This is where we actually call Razorpay to create the payment order.
+     * 
+     * Flow:
+     * 1. Validate payment exists and is in CREATED state
+     * 2. Create Razorpay order (external call happens NOW, not before)
+     * 3. Update payment status to PENDING
+     * 4. Return Razorpay order details for frontend checkout
+     * 
+     * @param orderId The order to initiate payment for
+     * @return RazorpayOrderResponse with details needed for frontend checkout
+     * @throws IllegalStateException if payment not found or not in valid state
+     */
+    @Transactional
+    public RazorpayOrderResponse initiatePayment(Long orderId) throws RazorpayException {
+        log.info("Initiating payment for orderId={}", orderId);
+        
+        Payment payment = paymentRepository.findByOrderId(orderId)
+            .orElseThrow(() -> new IllegalStateException("No payment record found for orderId=" + orderId));
+        
+        // Idempotency: if already has Razorpay order, return existing details
+        if (payment.getRazorpayOrderId() != null && !payment.getRazorpayOrderId().isBlank()) {
+            log.info("Payment already has Razorpay order, returning existing: orderId={}, razorpayOrderId={}", 
+                     orderId, payment.getRazorpayOrderId());
+            return new RazorpayOrderResponse(payment.getRazorpayOrderId(), payment.getRazorpayAmount(), razorpayKeyId);
         }
+        
+        // Only allow initiation from CREATED state
+        if (payment.getStatus() != PaymentStatus.CREATED) {
+            throw new IllegalStateException("Cannot initiate payment in status=" + payment.getStatus() + 
+                                            ". Payment must be in CREATED state.");
+        }
+        
+        // NOW we call Razorpay - user has explicitly clicked "Pay Now"
+        createAndAttachRazorpayOrder(payment);
+        
+        // Update status to PENDING (payment in progress)
+        payment.setStatus(PaymentStatus.PENDING);
+        paymentRepository.save(payment);
+        
+        log.info("Payment initiated: orderId={}, razorpayOrderId={}, status=PENDING", 
+                 orderId, payment.getRazorpayOrderId());
+        
+        return new RazorpayOrderResponse(payment.getRazorpayOrderId(), payment.getRazorpayAmount(), razorpayKeyId);
     }
 
     /**
@@ -125,10 +170,7 @@ public class PaymentService {
 
         payment.setRazorpayOrderId(rzOrderId);
         payment.setRazorpayAmount(amountPaise);
-        payment.setStatus(PaymentStatus.CREATED);
-
-        // Explicit save so changes are persisted even if this method is called outside the original transaction scope
-        paymentRepository.save(payment);
+        // Note: Status is set by the caller (initiatePayment), not here
     }
 
     public Optional<RazorpayOrderResponse> getRazorpayOrderForOrderId(Long orderId) {
@@ -137,5 +179,93 @@ public class PaymentService {
             p.getRazorpayAmount(),
             razorpayKeyId
         ));
+    }
+
+    /**
+     * Handle Razorpay webhook for payment events. Idempotent: skips publishing if status already final.
+     */
+    @Transactional
+    public void handleRazorpayWebhook(String payload, String signature) throws RazorpayException {
+        if (razorpayWebhookSecret == null || razorpayWebhookSecret.isBlank()) {
+            throw new IllegalStateException("Razorpay webhook secret not configured");
+        }
+
+        // Verify signature
+        Utils.verifyWebhookSignature(payload, signature, razorpayWebhookSecret);
+
+        JSONObject body = new JSONObject(payload);
+        String event = body.optString("event", "");
+        JSONObject paymentEntity = body.optJSONObject("payload") != null
+                ? body.getJSONObject("payload").optJSONObject("payment") != null
+                    ? body.getJSONObject("payload").getJSONObject("payment").optJSONObject("entity")
+                    : null
+                : null;
+
+        if (paymentEntity == null) {
+            log.warn("Razorpay webhook missing payment entity, event={}", event);
+            return;
+        }
+
+        String razorpayOrderId = paymentEntity.optString("order_id", null);
+        Long amountPaise = paymentEntity.has("amount") ? paymentEntity.getLong("amount") : null;
+        if (razorpayOrderId == null) {
+            log.warn("Razorpay webhook missing order_id, event={}", event);
+            return;
+        }
+
+        Optional<Payment> paymentOpt = paymentRepository.findByRazorpayOrderId(razorpayOrderId);
+        if (paymentOpt.isEmpty()) {
+            log.warn("Payment not found for razorpayOrderId={}, event={}", razorpayOrderId, event);
+            return;
+        }
+
+        Payment payment = paymentOpt.get();
+
+        if ("payment.captured".equals(event)) {
+            if (PaymentStatus.PAID == payment.getStatus()) {
+                log.info("Skipping duplicate payment.captured for razorpayOrderId={}", razorpayOrderId);
+                return;
+            }
+            payment.setStatus(PaymentStatus.PAID);
+            if (payment.getRazorpayAmount() == null && amountPaise != null) {
+                payment.setRazorpayAmount(amountPaise);
+            }
+            paymentRepository.save(payment);
+
+            PaymentCompletedV1 completedEvent = new PaymentCompletedV1(
+                UUID.randomUUID(),
+                "1.0",
+                Instant.now(),
+                payment.getId(),
+                payment.getOrderId(),
+                payment.getUserId(),
+                payment.getAmount() != null ? payment.getAmount() : 0.0
+            );
+            eventPublisher.publishPaymentCompleted(completedEvent);
+            // Order Service will receive this event via SQS and update order status
+        } else if ("payment.failed".equals(event)) {
+            if (PaymentStatus.FAILED == payment.getStatus()) {
+                log.info("Skipping duplicate payment.failed for razorpayOrderId={}", razorpayOrderId);
+                return;
+            }
+            payment.setStatus(PaymentStatus.FAILED);
+            paymentRepository.save(payment);
+
+            String reason = paymentEntity.optString("error_description", "Payment failed");
+            PaymentFailedV1 failedEvent = new PaymentFailedV1(
+                UUID.randomUUID(),
+                "1.0",
+                Instant.now(),
+                payment.getId(),
+                payment.getOrderId(),
+                payment.getUserId(),
+                payment.getAmount() != null ? payment.getAmount() : 0.0,
+                reason
+            );
+            eventPublisher.publishPaymentFailed(failedEvent);
+            // Order Service will receive this event via SQS and update order status
+        } else {
+            log.info("Ignoring unsupported Razorpay event type: {}", event);
+        }
     }
 }

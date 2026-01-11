@@ -24,9 +24,10 @@ dependencies {
 	implementation 'org.springframework.boot:spring-boot-starter-validation'
 	implementation 'org.springframework.boot:spring-boot-starter-webmvc'
 	
-	// Spring Cloud AWS for SNS
+	// Spring Cloud AWS for SNS and SQS
 	implementation platform('io.awspring.cloud:spring-cloud-aws-dependencies:4.0.0-M1')
 	implementation 'io.awspring.cloud:spring-cloud-aws-starter-sns'
+	implementation 'io.awspring.cloud:spring-cloud-aws-starter-sqs'
 	
 	// Event Schemas Library (using JAR file)
 	implementation files('../../event-schemas/latest-jar/event-schemas-1.0.0.jar')

@@ -19,8 +19,25 @@ spring:
     servlet:
       path: /api/v1
 
+aws:
+  sns:
+    topic:
+      order-events: arn:aws:sns:ap-south-1:625189191389:order-events
+  sqs:
+    payment-events-queue: ${PAYMENT_EVENTS_QUEUE:order-payment-events-queue}
+
 server:
   port: 8081
+  error:
+    include-message: always
+    include-binding-errors: always
+    include-stacktrace: always
+    include-exception: true
+
+logging:
+  level:
+    com.sj.ecommerce.order_service: DEBUG
+    org.springframework.web: DEBUG
 
 management:
   endpoints:
@@ -30,8 +47,3 @@ management:
   endpoint:
     health:
       show-details: always
-
-aws:
-  sns:
-    topic:
-      order-events: arn:aws:sns:ap-south-1:625189191389:order-events

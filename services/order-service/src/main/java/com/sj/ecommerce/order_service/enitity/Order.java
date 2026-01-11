@@ -21,7 +21,7 @@ public class Order {
     @Enumerated(EnumType.STRING)
     private PaymentStatus paymentStatus;
 
-    @ElementCollection
+    @ElementCollection(fetch = FetchType.EAGER)
     @CollectionTable(name = "order_products", joinColumns = @JoinColumn(name = "order_id"))
     @Column(name = "product_id")
     private List<Long> productIds;
@@ -30,20 +30,12 @@ public class Order {
 
     public Order() {}
 
-    // Full constructor (createdAt is set during persist)
     public Order(Long userId, Double amount, OrderStatus status, List<Long> productIds) {
         this.userId = userId;
         this.amount = amount;
         this.status = status;
         this.productIds = productIds;
-        if (this.paymentStatus == null) {
-            this.paymentStatus = PaymentStatus.PENDING;
-        }
-    }
-
-    // Convenience constructor used when creating a new order: default status CREATED
-    public Order(Long userId, Double amount, java.util.List<Long> productIds) {
-        this(userId, amount, OrderStatus.CREATED, productIds);
+        this.paymentStatus = PaymentStatus.PENDING;
     }
 
     @PrePersist
@@ -81,11 +73,11 @@ public class Order {
         this.createdAt = createdAt;
     }
 
-    public java.util.List<Long> getProductIds() {
+    public List<Long> getProductIds() {
         return productIds;
     }
 
-    public void setProductIds(java.util.List<Long> productIds) {
+    public void setProductIds(List<Long> productIds) {
         this.productIds = productIds;
     }
 

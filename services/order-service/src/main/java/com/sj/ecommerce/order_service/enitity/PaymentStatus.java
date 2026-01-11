@@ -9,6 +9,9 @@ public enum PaymentStatus {
     PENDING,
 
     // Payment completed successfully (captured/settled)
+    COMPLETED,
+    
+    // Alias for COMPLETED (legacy compatibility)
     PAID,
 
     // Payment attempt failed
