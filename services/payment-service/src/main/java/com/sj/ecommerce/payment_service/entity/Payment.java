@@ -23,6 +23,12 @@ public class Payment {
     @Column(name = "amount", nullable = false)
     private Double amount;
 
+    @Column(name = "razorpay_order_id")
+    private String razorpayOrderId;
+
+    @Column(name = "razorpay_amount")
+    private Long razorpayAmount;
+
     @Column(name = "idempotency_key", nullable = false)
     private String idempotencyKey;
 
@@ -42,6 +48,17 @@ public class Payment {
         this.idempotencyKey = idempotencyKey;
         this.status = status;
         this.createdAt = createdAt;
+    }
+
+    public Payment(Long orderId, Long userId, Double amount, String idempotencyKey, PaymentStatus status, Instant createdAt, String razorpayOrderId, Long razorpayAmount) {
+        this.orderId = orderId;
+        this.userId = userId;
+        this.amount = amount;
+        this.idempotencyKey = idempotencyKey;
+        this.status = status;
+        this.createdAt = createdAt;
+        this.razorpayOrderId = razorpayOrderId;
+        this.razorpayAmount = razorpayAmount;
     }
 
     public Long getId() {
@@ -70,6 +87,22 @@ public class Payment {
 
     public void setAmount(Double amount) {
         this.amount = amount;
+    }
+
+    public String getRazorpayOrderId() {
+        return razorpayOrderId;
+    }
+
+    public void setRazorpayOrderId(String razorpayOrderId) {
+        this.razorpayOrderId = razorpayOrderId;
+    }
+
+    public Long getRazorpayAmount() {
+        return razorpayAmount;
+    }
+
+    public void setRazorpayAmount(Long razorpayAmount) {
+        this.razorpayAmount = razorpayAmount;
     }
 
     public String getIdempotencyKey() {

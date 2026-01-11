@@ -3,6 +3,7 @@ package com.sj.ecommerce.payment_service.controller;
 import com.sj.ecommerce.payment_service.dto.CreatePaymentRequest;
 import com.sj.ecommerce.payment_service.dto.PaymentResponse;
 import com.sj.ecommerce.payment_service.service.PaymentService;
+import com.sj.ecommerce.payment_service.dto.RazorpayOrderResponse;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -26,6 +27,13 @@ public class PaymentController {
     @GetMapping("/{id}")
     public ResponseEntity<PaymentResponse> getPayment(@PathVariable Long id) {
         return paymentService.getPaymentById(id)
+                .map(ResponseEntity::ok)
+                .orElse(ResponseEntity.notFound().build());
+    }
+
+    @GetMapping("/order/{orderId}/razorpay")
+    public ResponseEntity<RazorpayOrderResponse> getRazorpayOrder(@PathVariable Long orderId) {
+        return paymentService.getRazorpayOrderForOrderId(orderId)
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
     }

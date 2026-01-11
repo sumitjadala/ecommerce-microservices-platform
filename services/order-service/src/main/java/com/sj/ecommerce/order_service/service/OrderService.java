@@ -22,7 +22,11 @@ public class OrderService {
     public OrderResponse createOrder(CreateOrderRequest request) {
         List<Long> productIds = request.productIds();
 
-        Order order = new Order(request.userId(), null, productIds);
+        // calculate amount based on products we should not reply on frontend for field like amount
+
+        Double totalOrderAmt = 1500.0;
+
+        Order order = new Order(request.userId(), totalOrderAmt, productIds);
         Order saved = orderRepository.save(order);
 
         // Create event using constructor-only immutable event class
@@ -32,7 +36,7 @@ public class OrderService {
             saved.getCreatedAt(),
             saved.getId(),
             saved.getUserId(),
-                saved.getAmount()
+            saved.getAmount()
         );
         snsEventPublisher.publish(event);
 

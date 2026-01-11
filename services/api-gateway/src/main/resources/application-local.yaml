@@ -6,7 +6,7 @@ spring:
       server:
         webflux:
           routes:
-            - id: order-service
+            - id: orders
               uri: http://order-service:8081
               predicates:
                 - Path=/api/v1/orders/**
