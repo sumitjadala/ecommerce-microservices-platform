@@ -89,25 +89,8 @@ public class PaymentService {
         Payment savedPayment = paymentRepository.save(payment);
         log.info("Payment record created: paymentId={}, orderId={}, status=CREATED (awaiting user payment intent)", 
                  savedPayment.getId(), savedPayment.getOrderId());
-        
-        // NOTE: We do NOT call Razorpay here. The user hasn't clicked "Pay Now" yet.
-        // Razorpay order will be created when user explicitly requests payment via POST /payments/{orderId}/initiate
     }
 
-    /**
-     * STEP 3 & 4: User clicks "Pay Now" - Initiate payment for an existing order.
-     * This is where we actually call Razorpay to create the payment order.
-     * 
-     * Flow:
-     * 1. Validate payment exists and is in CREATED state
-     * 2. Create Razorpay order (external call happens NOW, not before)
-     * 3. Update payment status to PENDING
-     * 4. Return Razorpay order details for frontend checkout
-     * 
-     * @param orderId The order to initiate payment for
-     * @return RazorpayOrderResponse with details needed for frontend checkout
-     * @throws IllegalStateException if payment not found or not in valid state
-     */
     @Transactional
     public RazorpayOrderResponse initiatePayment(Long orderId) throws RazorpayException {
         log.info("Initiating payment for orderId={}", orderId);

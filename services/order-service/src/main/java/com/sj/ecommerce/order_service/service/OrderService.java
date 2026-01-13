@@ -15,11 +15,11 @@ import java.util.*;
 @Service
 public class OrderService {
     private final OrderRepository orderRepository;
-    private final SnsEventPublisher snsEventPublisher;
+    private final OrderEventPublisher orderEventPublisher;
 
-    public OrderService(OrderRepository orderRepository, SnsEventPublisher snsEventPublisher) {
+    public OrderService(OrderRepository orderRepository, OrderEventPublisher orderEventPublisher) {
         this.orderRepository = orderRepository;
-        this.snsEventPublisher = snsEventPublisher;
+        this.orderEventPublisher = orderEventPublisher;
     }
 
     public OrderResponse createOrder(CreateOrderRequest request) {
@@ -39,7 +39,7 @@ public class OrderService {
             saved.getUserId(),
             saved.getAmount()
         );
-        snsEventPublisher.publish(event);
+        orderEventPublisher.publish(event);
 
         List<Long> savedProductIds = saved.getProductIds() == null ? List.of() : saved.getProductIds();
         return new OrderResponse(
@@ -67,14 +67,6 @@ public class OrderService {
                 });
     }
 
-    /**
-     * Update payment status for an order.
-     * Called by Payment Service after payment success/failure via REST.
-     * 
-     * NOTE: In a production system, this would be event-driven (Payment Service publishes
-     * PaymentCompleted/PaymentFailed events, Order Service subscribes via separate SQS queue).
-     * Using REST here for simplicity in this portfolio project.
-     */
     @Transactional
     public Optional<OrderResponse> updatePaymentStatus(Long orderId, String paymentStatus) {
         return orderRepository.findById(orderId)

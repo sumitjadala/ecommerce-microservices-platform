@@ -9,24 +9,21 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 @Service
-public class SnsEventPublisher {
-    private static final Logger logger = LoggerFactory.getLogger(SnsEventPublisher.class);
-
+public class OrderEventPublisher {
+    private static final Logger logger = LoggerFactory.getLogger(OrderEventPublisher.class);
     private final SnsTemplate snsTemplate;
 
     @Value("${aws.sns.topic.order-events}")
     private String orderEventsTopicArn;
 
-    public SnsEventPublisher(SnsTemplate snsTemplate) {
+    public OrderEventPublisher(SnsTemplate snsTemplate) {
         this.snsTemplate = snsTemplate;
     }
 
     public void publish(OrderCreatedV1 event) {
         try {
             snsTemplate.sendNotification(orderEventsTopicArn, event, "ORDER_CREATED");
-            
             logger.info("Successfully published ORDER_CREATED to SNS");
-
         } catch (Exception e) {
             logger.error("Failed to publish ORDER_CREATED event", e);
             throw new EventPublishingException("SNS publishing failed", null, e);

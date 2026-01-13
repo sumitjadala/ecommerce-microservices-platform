@@ -31,7 +31,6 @@ public class OrderEventListener {
         try {
             String messageBody = message.getPayload();
             log.info("Received SQS message: {}", messageBody);
-            
             OrderCreatedV1 event = objectMapper.readValue(messageBody, OrderCreatedV1.class);
             paymentService.processOrderCreatedEvent(event);
             
