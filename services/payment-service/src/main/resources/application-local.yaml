@@ -21,9 +21,9 @@ spring:
 
 aws:
   sqs:
-    queue-name: ${SQS_QUEUE_NAME:payment-order-created-queue}
+    queue-name: order-events-queue
   sns:
-    topic-arn: ${SNS_TOPIC_ARN:arn:aws:sns:ap-south-1:625189191389:payment-events}
+    topic-arn: arn:aws:sns:ap-south-1:625189191389:payment-events-topic
 
 server:
   port: 8082

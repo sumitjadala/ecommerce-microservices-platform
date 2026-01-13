@@ -22,9 +22,9 @@ spring:
 aws:
   sns:
     topic:
-      order-events: arn:aws:sns:ap-south-1:625189191389:order-events
+      order-events: arn:aws:sns:ap-south-1:625189191389:order-events-topic
   sqs:
-    payment-events-queue: ${PAYMENT_EVENTS_QUEUE:order-payment-events-queue}
+    payment-events-queue: payment-events-queue
 
 server:
   port: 8081
